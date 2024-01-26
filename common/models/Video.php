@@ -2,10 +2,12 @@
 
 namespace common\models;
 
+use Imagine\Image\Box;
 use Yii;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use yii\helpers\FileHelper;
+use yii\imagine\image;
 
 /**
  * This is the model class for table "{{%video}}".
@@ -77,6 +79,8 @@ class Video extends \yii\db\ActiveRecord
             [['video_id'], 'unique'],
             ['has_thumbnail', 'default', 'value' => 0],
             ['status', 'default', 'value' => self::STATUS_UNLISTED],
+            // ['thumbnail', 'file', 'extensions' => 'jpg'],
+            [['video'], 'file', 'extensions' => ['mp4']],
             [['created_by'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['created_by' => 'id']],
         ];
     }
@@ -139,6 +143,7 @@ class Video extends \yii\db\ActiveRecord
             $this->title = $this->video->name;
             $this->video_name = $this->video->name;
         }
+        
         if($this->thumbnail){
             $this->has_thumbnail = 1;
         }
@@ -158,12 +163,17 @@ class Video extends \yii\db\ActiveRecord
             }
             $this->video->saveAs($videoPath);
         }
+
         if($this->thumbnail){
             $thumbnailPath = Yii::getAlias('@frontend/web/storage/thumbs/'.$this->video_id.'.jpg', $throwException = true);
             if (!is_dir(dirname($thumbnailPath))) {
                 FileHelper::createDirectory(dirname($thumbnailPath));
             }
-            $this->video->saveAs($thumbnailPath);
+            $this->thumbnail[0]->saveAs($thumbnailPath);
+            Image::getImagine()
+                ->open($thumbnailPath)
+                ->thumbnail(new Box(1280, 1280))
+                ->save();
         }
         return true;
     }
@@ -175,4 +185,33 @@ class Video extends \yii\db\ActiveRecord
     {
         return Yii::$app->params['frontendUrl'].'/storage/videos/'.$this->video_id.'.mp4';
     }
+
+    /**
+     * Function to get thumbnail link
+     */
+    public function getThumbnailLink()
+    {
+        return $this->has_thumbnail ? 
+            Yii::$app->params['frontendUrl'].'/storage/thumbs/'.$this->video_id.'.jpg'
+            : '';
+    }
+
+    /**
+     * We need to clean up the files once the video is deleted
+     */
+    public function afterDelete()
+    {
+        parent::afterDelete();
+        $videoPath = Yii::getAlias('@frontend/web/storage/videos/'.$this->video_id.'.mp4', $throwException = true);
+        // Check if the video exists
+        if(file_exists($videoPath)){
+            unlink($videoPath);
+        }
+        $thumbnailPath = Yii::getAlias('@frontend/web/storage/thumbs/'.$this->video_id.'.jpg', $throwException = true);
+        // Check if the thumbnail exists
+        if(file_exists($thumbnailPath)){
+            unlink($thumbnailPath);
+        }
+    }
+
 }

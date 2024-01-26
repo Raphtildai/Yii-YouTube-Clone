@@ -119,6 +119,7 @@ aside .nav-pills .nav-link:active {
 
 .content-wrapper {
     flex: 1;
+    padding-bottom: 100px;
 }
 
 .upload-icon {

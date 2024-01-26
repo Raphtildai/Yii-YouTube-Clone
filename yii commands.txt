@@ -1,0 +1,15 @@
+## Creating migrations
+
+	php yii migrate/create create_videos_table --fields="video_id:string(16):notNull,title:string(512):notNull,description:text(),created_by:integer(11):foreignKey(user)"
+
+## Running migrations
+
+	php yii migrate
+
+## To down the last migrations committed
+	php yii migrate/down
+
+## Composer package to resize images
+	composer require yiisoft/yii2-imagine
+
+## Timestamp 4:13:14

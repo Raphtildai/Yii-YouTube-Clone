@@ -11,6 +11,7 @@ return [
     'name' => 'YouTube Clone',
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
+    'defaultRoute' => 'video/index',
     'controllerNamespace' => 'frontend\controllers',
     'components' => [
         'request' => [
@@ -43,6 +44,9 @@ return [
             'showScriptName' => false,
             'rules' => [
             ],
+        ],
+        'assetManager' => [
+            'appendTimestamp' => true
         ],
         
     ],
