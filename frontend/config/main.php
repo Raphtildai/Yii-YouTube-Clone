@@ -43,6 +43,7 @@ return [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                '/c/<username>' => '/channel/view'
             ],
         ],
         'assetManager' => [

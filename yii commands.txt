@@ -1,7 +1,10 @@
 ## Creating migrations
 
 	php yii migrate/create create_videos_table --fields="video_id:string(16):notNull,title:string(512):notNull,description:text(),created_by:integer(11):foreignKey(user)"
-
+	php yii migrate/create create_video_view_table --fields="video_id:string(16):notNull:foreignKey(video),user_id:integer(11):foreignKey(user),created_at:integer(11)"
+	php yii migrate/create create_video_like_table --fields="video_id:string(16):notNull:foreignKey(video),user_id:integer(11):notNull:foreignKey(user),type:integer(1),created_at:integer(11)"
+	php yii migrate/create create_subscriber_table --fields="channel_id:integer(11):foreignKey(user), user_id:integer(11):foreignKey(user),created_at:integer(11)"
+	
 ## Running migrations
 
 	php yii migrate
@@ -12,4 +15,6 @@
 ## Composer package to resize images
 	composer require yiisoft/yii2-imagine
 
-## Timestamp 4:13:14
+## Pjax allows us to work with ajax without reloading the page
+
+## Timestamp 5:24:47

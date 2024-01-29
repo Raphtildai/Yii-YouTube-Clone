@@ -2,6 +2,7 @@
 
 namespace common\models;
 
+use app\models\Subscriber;
 use Yii;
 use yii\base\NotSupportedException;
 use yii\behaviors\TimestampBehavior;
@@ -209,5 +210,27 @@ class User extends ActiveRecord implements IdentityInterface
     public function removePasswordResetToken()
     {
         $this->password_reset_token = null;
+    }
+
+    /**
+     * Function to check if the user is subscribed or not
+     */
+    public function isSubscribed($userId)
+    {
+        return Subscriber::find()->andWhere([
+            'channel_id' => $this->id,
+            'user_id' => $userId
+        ])->one();
+    }
+
+    /**
+     * @return yii\db\ActiveQuery
+     * @throws yii\base\InvalidConfigException
+     */
+
+    public function getSubscribers()
+    {
+        return $this->hasMany(User::class, ['id' => 'user_id'])
+            ->viaTable('subscriber', ['channel_id' => 'id']);
     }
 }

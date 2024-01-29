@@ -8,6 +8,7 @@ use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use yii\helpers\FileHelper;
 use yii\imagine\image;
+use yii\db\ActiveQuery; 
 
 /**
  * This is the model class for table "{{%video}}".
@@ -24,6 +25,9 @@ use yii\imagine\image;
  * @property int|null $created_by
  *
  * @property User $createdBy
+ * @property \common\models\VideoLike[] $likes
+ * @property \common\models\VideoLike[] $dislikes
+ *
  */
 class Video extends \yii\db\ActiveRecord
 {
@@ -127,6 +131,31 @@ class Video extends \yii\db\ActiveRecord
     }
 
     /**
+     * Function to get views from the views table
+     * @return ActiveQuery
+     */
+    public function getViews(){
+        return $this->hasMany(VideoView::class, ['video_id' => 'video_id']);
+    }
+
+    /**
+     * Function to return the number of likes for a particular video
+     * @return ActiveQuery
+     */
+    public function getLikes(){
+        return $this->hasMany(VideoLike::class, ['video_id' => 'video_id'])->liked();
+    }
+
+    /**
+     * Function to return the number of dislikes for the video
+     * @return ActiveQuery
+     */
+    public function getDisLikes()
+    {
+        return $this->hasMany(VideoLike::class, ['video_id' => 'video_id'])->disLiked();
+    }
+
+    /**
      * {@inheritdoc}
      * @return \common\models\query\VideoQuery the active query used by this AR class.
      */
@@ -214,4 +243,25 @@ class Video extends \yii\db\ActiveRecord
         }
     }
 
+    /**
+     * Function to check if the user has liked the video or not
+     */
+    public function isLikedBy($userId)
+    {
+        return VideoLike::find()
+            ->userIdVideoId($userId, $this->video_id);
+            // ->liked()
+            // ->one();
+    }
+
+    /**
+     * Function to check if the user has disliked the video or not
+     */
+    public function isDisLikedBy($userId)
+    {
+        return VideoLike::find()
+            ->userIdVideoId($userId, $this->video_id);
+            // ->disLiked()
+            // ->one();
+    }
 }

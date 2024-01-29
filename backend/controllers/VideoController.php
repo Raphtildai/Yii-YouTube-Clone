@@ -33,7 +33,7 @@ class VideoController extends Controller
                         ]
                     ]
                 ],
-                'verbs' => [
+                'verb' => [
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
