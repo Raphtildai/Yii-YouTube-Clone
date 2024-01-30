@@ -23,7 +23,7 @@ class VideoController extends \yii\web\Controller
             [
                 'access' => [
                     'class' => AccessControl::class,
-                    'only' => ['like', 'dislike'],
+                    'only' => ['like', 'dislike', 'history'],
                     'rules' => [
                         [
                             'allow' => true,
@@ -54,18 +54,26 @@ class VideoController extends \yii\web\Controller
     /**
      * Function to view a single video
      */
-    public function actionView($id)
+    public function actionView($video_id)
     {
         $this->layout = 'auth';
-        $video = $this->findVideo($id);
+        $video = $this->findVideo($video_id);
         // Saving the video to video_view
         $videoView = new VideoView();
-        $videoView->video_id = $id;
+        $videoView->video_id = $video_id;
         $videoView->user_id = Yii::$app->user->id;
         $videoView->created_at = time();
         $videoView->save();
+
+        $similarVideos = Video::find()
+        ->published()
+        ->andWhere(['NOT', ['video_id' => $video_id]])
+        ->byKeyword($video->title)
+        ->limit(10)
+        ->all();
         return $this->render('view', [
-            'model' => $video
+            'model' => $video,
+            'similarVideos' => $similarVideos
         ]);
     }
 
@@ -116,6 +124,25 @@ class VideoController extends \yii\web\Controller
     }
 
     /**
+     * Function to search the video by keyword
+     */
+    public function actionSearch($keyword)
+    {
+        $query = Video::find()
+                ->published()
+                ->latest();
+        if ($keyword){
+            $query->byKeyword($keyword);
+        }
+        $dataProvider = new ActiveDataProvider([
+            'query' => $query
+        ]);
+        return $this->render('search', [
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    /**
      * Function to find the id
      */
     protected function findVideo($video_id)
@@ -139,6 +166,25 @@ class VideoController extends \yii\web\Controller
         $videoLikeDislike->type = $type;
         $videoLikeDislike->created_at = time();
         $videoLikeDislike->save();
+    }
+
+    public function actionHistory()
+    {
+        $query = Video::find()
+        ->alias('v')
+        ->innerJoin("(SELECT video_id, MAX(created_at) as max_date FROM video_view WHERE user_id = :userId GROUP BY video_id) vv", 'vv.video_id = v.video_id', [
+            'userId' => Yii::$app->user->id
+        ])
+        ->orderBy('vv.max_date DESC');
+        // dump($query);
+        // exit;
+
+        $dataProvider = new ActiveDataProvider([
+            'query' => $query
+        ]);
+        return $this->render('history', [
+            'dataProvider' => $dataProvider,
+        ]);
     }
 
 }

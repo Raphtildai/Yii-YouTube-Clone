@@ -2,7 +2,11 @@
 
 namespace backend\controllers;
 
+use common\models\Subscriber;
+// use app\models\Subscriber;
 use common\models\LoginForm;
+use common\models\Video;
+use common\models\VideoView;
 use Yii;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
@@ -57,12 +61,47 @@ class SiteController extends Controller
 
     /**
      * Displays homepage.
-     *
      * @return string
+     * 
      */
     public function actionIndex()
     {
-        return $this->render('index');
+        $user = Yii::$app->user;
+        $userId = $user->id;
+
+        $latestVideo = Video::find()
+            ->latest()
+            ->creator($userId)
+            ->limit(1)
+            ->one();
+
+        $numberOfViews = VideoView::find()
+            ->alias('vv')
+            ->innerJoin(Video::tableName(). 'v', 'v.video_id = vv.video_id')
+            ->andWhere(['v.created_by' => $userId])
+            ->count();
+
+        $numberOfSubscribers = Yii::$app->cache->get('subscriber-'.$userId);
+        if(!$numberOfSubscribers){
+            $numberOfSubscribers = $user->getSubscribers()->count();
+            Yii::$app->cache->set('subscriber-'.$userId, $numberOfSubscribers);
+        }
+
+        $subscribers = Subscriber::find()
+            ->with('user')
+            ->andWhere([
+                'channel_id' => $userId
+            ])
+            ->orderBy('created_at DESC')
+            ->limit(3)
+            ->all();
+
+        return $this->render('index', [
+            'lastestVideo' => $latestVideo,
+            'numberOfViews' => $numberOfViews,
+            'numberOfSubscribers' => $numberOfSubscribers,
+            'subscribers' => $subscribers
+        ]);
     }
 
     /**

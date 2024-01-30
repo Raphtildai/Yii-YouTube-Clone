@@ -225,7 +225,6 @@ class User extends ActiveRecord implements IdentityInterface
 
     /**
      * @return yii\db\ActiveQuery
-     * @throws yii\base\InvalidConfigException
      */
 
     public function getSubscribers()

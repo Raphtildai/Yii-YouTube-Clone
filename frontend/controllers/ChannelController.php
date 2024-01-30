@@ -5,7 +5,9 @@ namespace frontend\controllers;
 use app\models\Subscriber;
 use yii\web\NotFoundHttpException;
 use common\models\User;
+use common\models\Video;
 use Yii;
+use yii\data\ActiveDataProvider;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 
@@ -44,8 +46,14 @@ class ChannelController extends \yii\web\Controller
     public function actionView($username)
     {
         $channel = $this->findChannel($username);
+
+        // Implementing pagination
+        $dataProvider = new ActiveDataProvider([
+            'query' => Video::find()->creator($channel->id)->published()
+        ]);
         return $this->render('view', [
-            'channel' => $channel
+            'channel' => $channel,
+            'dataProvider' => $dataProvider
         ]);
     }
 
@@ -69,6 +77,17 @@ class ChannelController extends \yii\web\Controller
             $subscriber->user_id = $userId;
             $subscriber->created_at = time();
             $subscriber->save();
+            Yii::$app->mailer->compose([
+                'html' => 'subscriber-html', 'text' => 'subscriber-text'
+            ], [
+                'channel' => $channel,
+                'user' => Yii::$app->user->identity
+            ])
+                ->setFrom(Yii::$app->params['senderEmail'])
+                ->setTo($channel->email)
+                ->setSubject('You have new subscriber')
+                ->send();
+                
         }else{
             $subscriber->delete();
         }
